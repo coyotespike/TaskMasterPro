@@ -3,6 +3,7 @@ import TaskInput from '@/components/TaskInput';
 import TaskList from '@/components/TaskList';
 import ScheduleDisplay from '@/components/ScheduleDisplay';
 import { usePlanner } from '@/hooks/usePlanner';
+import { CalendarClock, Sparkles } from 'lucide-react';
 
 const Home = () => {
   const { 
@@ -18,42 +19,62 @@ const Home = () => {
   } = usePlanner();
 
   useEffect(() => {
-    document.title = 'Daily Task Planner';
+    document.title = 'AI Task Planner';
   }, []);
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-5xl">
-      {/* Header */}
-      <header className="mb-8 text-center">
-        <h1 className="text-3xl font-bold text-primary dark:text-indigo-400 mb-2">Daily Task Planner</h1>
-        <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-          Add your tasks below and our AI will organize them into an optimized daily schedule.
-        </p>
-      </header>
+    <div className="min-h-screen bg-gradient-to-b from-white to-indigo-50/30 dark:from-gray-900 dark:to-gray-800/30">
+      <div className="container mx-auto px-4 py-12 max-w-6xl">
+        {/* Header */}
+        <header className="mb-12 text-center">
+          <div className="flex items-center justify-center mb-3">
+            <CalendarClock className="h-10 w-10 text-primary mr-3" />
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-indigo-500 dark:from-indigo-400 dark:to-violet-400 bg-clip-text text-transparent">
+              AI Task Planner
+            </h1>
+          </div>
+          <div className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-full py-3 px-6 max-w-2xl mx-auto shadow-sm border border-gray-100 dark:border-gray-700">
+            <p className="text-gray-700 dark:text-gray-300 flex items-center justify-center">
+              <Sparkles className="h-4 w-4 mr-2 text-primary" />
+              Add your tasks below and our AI will create your optimized daily schedule
+            </p>
+          </div>
+        </header>
 
-      {/* Main Content */}
-      <main className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Left Column: Task Input */}
-        <div className="lg:col-span-5 space-y-6">
-          <TaskInput onAddTask={addTask} />
-          <TaskList 
-            tasks={tasks} 
-            onRemoveTask={removeTask} 
-            onGenerateSchedule={generateTaskSchedule}
-            isLoading={isLoading}
-          />
-        </div>
+        {/* Main Content */}
+        <main className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          {/* Left Column: Task Input */}
+          <div className="lg:col-span-5 space-y-6">
+            <TaskInput onAddTask={addTask} />
+            <TaskList 
+              tasks={tasks} 
+              onRemoveTask={removeTask} 
+              onGenerateSchedule={generateTaskSchedule}
+              isLoading={isLoading}
+            />
+          </div>
 
-        {/* Right Column: Schedule Output */}
-        <div className="lg:col-span-7 space-y-6">
-          <ScheduleDisplay 
-            schedule={schedule || []} 
-            isLoading={isLoading}
-            error={error}
-            explanation={explanation}
-          />
-        </div>
-      </main>
+          {/* Right Column: Schedule Output */}
+          <div className="lg:col-span-7 space-y-6">
+            <ScheduleDisplay 
+              schedule={schedule || []} 
+              isLoading={isLoading}
+              error={error}
+              explanation={explanation}
+            />
+          </div>
+        </main>
+        
+        {/* Footer */}
+        <footer className="mt-16 text-center text-gray-500 dark:text-gray-400 text-sm">
+          <p className="flex items-center justify-center">
+            <span className="mr-1">Powered by</span> 
+            <span className="text-primary font-medium">OpenAI</span>
+            <span className="mx-2">•</span>
+            <span>© {new Date().getFullYear()}</span>
+          </p>
+        </footer>
+      </div>
     </div>
   );
 };

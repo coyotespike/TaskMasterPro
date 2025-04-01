@@ -1,16 +1,58 @@
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import LoadingIndicator from "./LoadingIndicator";
 import ExplanationCard from "./ExplanationCard";
 import { 
   AlertCircle, Clock, Coffee, Briefcase, Book, 
   ShoppingCart, Dumbbell, Utensils, HeartPulse, 
-  Bike, Phone, Mail, Music, VideoIcon, Users, Home 
+  Bike, Phone, Mail, Music, VideoIcon, Users, Home,
+  Image as ImageIcon
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScheduleDisplayProps } from "@/types";
+import { getTaskImage } from "@/services/imageService";
 
 const ScheduleDisplay = ({ schedule, isLoading, error, explanation }: ScheduleDisplayProps) => {
   const hasSchedule = schedule && schedule.length > 0 && explanation;
+  const [taskImages, setTaskImages] = useState<Record<string, string>>({});
+  const [loadingImages, setLoadingImages] = useState<Record<string, boolean>>({});
+
+  // Load images for each task when schedule changes
+  useEffect(() => {
+    if (schedule && schedule.length > 0) {
+      // Only load images for tasks that don't already have images
+      const tasksNeedingImages = schedule.filter(
+        item => !taskImages[item.taskDescription] && !loadingImages[item.taskDescription]
+      );
+      
+      if (tasksNeedingImages.length === 0) return;
+      
+      // Mark these tasks as loading
+      const newLoadingState = { ...loadingImages };
+      tasksNeedingImages.forEach(item => {
+        newLoadingState[item.taskDescription] = true;
+      });
+      setLoadingImages(newLoadingState);
+      
+      // Load images for each task
+      tasksNeedingImages.forEach(async (item) => {
+        try {
+          const imageUrl = await getTaskImage(item.taskDescription);
+          setTaskImages(prev => ({
+            ...prev,
+            [item.taskDescription]: imageUrl
+          }));
+        } catch (error) {
+          console.error(`Failed to load image for task: ${item.taskDescription}`, error);
+        } finally {
+          setLoadingImages(prev => ({
+            ...prev,
+            [item.taskDescription]: false
+          }));
+        }
+      });
+    }
+  }, [schedule]);
   
   // Function to determine which icon to show based on task description
   const getTaskIcon = (taskDescription: string) => {
@@ -129,12 +171,34 @@ const ScheduleDisplay = ({ schedule, isLoading, error, explanation }: ScheduleDi
                 </div>
                 <div className="ml-8 mt-3">
                   <div className="bg-gray-50 dark:bg-gray-750 p-4 rounded-lg border border-gray-100 dark:border-gray-700">
-                    <h3 className="font-medium text-gray-900 dark:text-white">{item.taskDescription}</h3>
-                    {item.details && (
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                        {item.details}
-                      </p>
-                    )}
+                    <div className="flex items-start">
+                      {taskImages[item.taskDescription] ? (
+                        <div className="flex-shrink-0 mr-4">
+                          <div className="w-16 h-16 rounded-md overflow-hidden">
+                            <img 
+                              src={taskImages[item.taskDescription]} 
+                              alt={`Icon for ${item.taskDescription}`}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                        </div>
+                      ) : loadingImages[item.taskDescription] ? (
+                        <div className="flex-shrink-0 mr-4">
+                          <div className="w-16 h-16 rounded-md bg-gray-200 dark:bg-gray-700 flex items-center justify-center animate-pulse">
+                            <ImageIcon className="w-6 h-6 text-gray-400 dark:text-gray-500" />
+                          </div>
+                        </div>
+                      ) : null}
+                      
+                      <div className="flex-1">
+                        <h3 className="font-medium text-gray-900 dark:text-white">{item.taskDescription}</h3>
+                        {item.details && (
+                          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                            {item.details}
+                          </p>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>

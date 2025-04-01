@@ -27,7 +27,8 @@ export type Task = z.infer<typeof taskSchema>;
 export const scheduleItemSchema = z.object({
   time: z.string(),
   taskDescription: z.string(),
-  details: z.string().optional()
+  details: z.string().optional(),
+  imageUrl: z.string().optional()
 });
 
 export type ScheduleItem = z.infer<typeof scheduleItemSchema>;
