@@ -1,6 +1,6 @@
 # Task Planner AI
 
-An AI-powered task planning application that generates optimized daily schedules with intelligent insights and user-friendly design. Made with Claude, Replit, ChatGPT, Vercel.
+An AI-powered task planning application that generates optimized daily schedules with intelligent insights and user-friendly design. Made with Claude, Replit, ChatGPT, Vercel, and NextJS.
 
 ## Features
 
