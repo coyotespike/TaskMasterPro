@@ -48,16 +48,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // Test mock response only when explicitly requested
+      // Only use mock responses if explicitly configured
       if (process.env.USE_MOCK_IMAGES === 'true') {
         console.log('Using mock image response');
-        // Return a placeholder image URL after a short delay to simulate API call
-        return setTimeout(() => {
-          res.json({ 
-            imageUrl: 'https://placehold.co/600x400/6366f1/white?text=TASK',
-            isMock: true
-          });
-        }, 500);
+        // Get the first letter of the task as a simple identifier
+        const firstLetter = taskDescription.trim()[0]?.toUpperCase() || 'T';
+        const color = '6366f1'; // Indigo color for mock images
+        return res.json({ 
+          imageUrl: `https://placehold.co/600x400/${color}/white?text=${firstLetter}`
+        });
       }
 
       const openai = new OpenAI({
@@ -66,62 +65,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log(`Generating image for task: "${taskDescription}"`);
       
-      // Create a conceptual prompt for the image that focuses on the task meaning, not text
-      let cleanDescription = taskDescription.replace(/[^a-zA-Z0-9\s-]/g, ''); // Remove special characters
+      // Create a direct and simple prompt that creates a visual representation
+      const prompt = `Create a simple, colorful icon representing the task: "${taskDescription}".
       
-      // Extract the main concept from the task description
-      const conceptKeywords = cleanDescription.toLowerCase()
-        .split(' ')
-        .filter((word: string) => 
-          !['the', 'a', 'an', 'to', 'for', 'in', 'on', 'at', 'by', 'with', 'and', 'or', 'of'].includes(word)
-        );
+      Important requirements:
+      1. NO TEXT OR WRITING in the image
+      2. Use a bright, solid color background
+      3. Create a clean, minimal design that's clearly visible at small sizes
+      4. The image should visually represent the action or object in the task
+      5. Use a modern, flat design style with simple shapes and bold colors
       
-      // Identify key activities or objects in the task
-      let concept = '';
-      if (cleanDescription.toLowerCase().includes('exercise') || 
-          cleanDescription.toLowerCase().includes('run') || 
-          cleanDescription.toLowerCase().includes('workout')) {
-        concept = 'exercise, runner, fitness, workout';
-      } else if (cleanDescription.toLowerCase().includes('meeting') || 
-                cleanDescription.toLowerCase().includes('call')) {
-        concept = 'business meeting, conference call, video chat, collaboration';
-      } else if (cleanDescription.toLowerCase().includes('study') || 
-                cleanDescription.toLowerCase().includes('read')) {
-        concept = 'study, book, learning, education, knowledge';
-      } else if (cleanDescription.toLowerCase().includes('eat') || 
-                cleanDescription.toLowerCase().includes('lunch') || 
-                cleanDescription.toLowerCase().includes('dinner') || 
-                cleanDescription.toLowerCase().includes('breakfast')) {
-        concept = 'meal, food, dining, eating, restaurant';
-      } else if (cleanDescription.toLowerCase().includes('clean') || 
-                cleanDescription.toLowerCase().includes('laundry') || 
-                cleanDescription.toLowerCase().includes('dishes')) {
-        concept = 'cleaning, home maintenance, housework';
-      } else if (cleanDescription.toLowerCase().includes('shop') || 
-                cleanDescription.toLowerCase().includes('buy') || 
-                cleanDescription.toLowerCase().includes('purchase')) {
-        concept = 'shopping, retail, store, purchase';
-      } else if (cleanDescription.toLowerCase().includes('travel') || 
-                cleanDescription.toLowerCase().includes('drive') || 
-                cleanDescription.toLowerCase().includes('flight')) {
-        concept = 'travel, transportation, journey, vacation';
-      } else {
-        // Use the first few meaningful keywords if no specific category is found
-        concept = conceptKeywords.slice(0, 3).join(', ');
-      }
-      
-      // Create the prompt focusing on the conceptual meaning rather than the text description
-      const prompt = `Design a simple, colorful, flat icon representing the concept of "${concept}". 
-      Important rules:
-      1. NO TEXT OR LETTERS OF ANY KIND in the image
-      2. Use bright, solid colors and simple geometric shapes
-      3. Create a centered symbolic representation on a colored background
-      4. Use a minimalist style with clean lines and shapes
-      5. Make it instantly recognizable at small sizes
-      6. Focus on a single clear concept rather than multiple ideas
-      7. Use colors that evoke the mood of the activity
-      
-      This icon will be used as a small task icon in a scheduling app. Keep it visually distinct and meaningful.`;
+      This will be used as a small task icon in a scheduling application.`;
 
       // Set a timeout to prevent hanging indefinitely - increase to 30 seconds for image generation
       const timeoutPromise = new Promise((_, reject) => {

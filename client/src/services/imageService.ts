@@ -2,266 +2,35 @@ import { ApiError } from "@/types";
 
 interface ImageGenerationResponse {
   imageUrl: string;
-  isMock?: boolean;
 }
 
 /**
- * Task categories with colors and emojis for better fallback images
+ * Simple fallback color generator based on task type
  */
-interface TaskCategory {
-  color: string;
-  icon: string; // Unicode emoji
-  name: string;
-}
-
-const TASK_CATEGORIES: Record<string, TaskCategory> = {
-  work: {
-    color: "6366f1", // Indigo
-    icon: "💼",
-    name: "Work"
-  },
-  meeting: {
-    color: "8b5cf6", // Violet
-    icon: "👥",
-    name: "Meeting"
-  },
-  study: {
-    color: "a78bfa", // Purple
-    icon: "📚",
-    name: "Study"
-  },
-  exercise: {
-    color: "10b981", // Emerald
-    icon: "🏃",
-    name: "Exercise"
-  },
-  food: {
-    color: "f59e0b", // Amber
-    icon: "🍽️",
-    name: "Food"
-  },
-  shopping: {
-    color: "ec4899", // Pink
-    icon: "🛒",
-    name: "Shopping"
-  },
-  cleaning: {
-    color: "06b6d4", // Cyan
-    icon: "🧹",
-    name: "Cleaning"
-  },
-  relaxation: {
-    color: "3b82f6", // Blue
-    icon: "🧘",
-    name: "Relaxation"
-  },
-  sleep: {
-    color: "6366f1", // Indigo
-    icon: "😴",
-    name: "Sleep"
-  },
-  travel: {
-    color: "f97316", // Orange
-    icon: "✈️",
-    name: "Travel"
-  },
-  entertainment: {
-    color: "ec4899", // Pink
-    icon: "🎮",
-    name: "Entertainment"
-  },
-  social: {
-    color: "f59e0b", // Amber
-    icon: "🎉",
-    name: "Social"
-  },
-  health: {
-    color: "14b8a6", // Teal
-    icon: "💊",
-    name: "Health"
-  },
-  default: {
-    color: "6366f1", // Indigo
-    icon: "📋",
-    name: "Task"
-  }
-};
-
-/**
- * Keyword mappings to categories
- */
-const KEYWORD_TO_CATEGORY: Record<string, string> = {
-  // Work related
-  "work": "work",
-  "job": "work",
-  "project": "work",
-  "email": "work",
-  "report": "work",
-  "office": "work",
-  "business": "work",
+const getFallbackColor = (taskDescription: string): string => {
+  const lowerDesc = taskDescription.toLowerCase();
   
-  // Meetings
-  "meeting": "meeting",
-  "call": "meeting",
-  "presentation": "meeting",
-  "conference": "meeting",
-  "zoom": "meeting",
-  "interview": "meeting",
-  
-  // Study related
-  "study": "study",
-  "read": "study",
-  "learn": "study",
-  "homework": "study", 
-  "research": "study",
-  "class": "study",
-  "book": "study",
-  "lecture": "study",
-  
-  // Exercise related
-  "exercise": "exercise",
-  "workout": "exercise",
-  "gym": "exercise",
-  "run": "exercise",
-  "jog": "exercise",
-  "fitness": "exercise",
-  "sport": "exercise",
-  "training": "exercise",
-  
-  // Food related
-  "eat": "food",
-  "lunch": "food",
-  "dinner": "food",
-  "breakfast": "food",
-  "cook": "food", 
-  "meal": "food",
-  "food": "food",
-  "restaurant": "food",
-  
-  // Shopping related
-  "shop": "shopping",
-  "buy": "shopping",
-  "purchase": "shopping",
-  "store": "shopping",
-  "mall": "shopping",
-  "grocery": "shopping",
-  "market": "shopping",
-  
-  // Cleaning related
-  "clean": "cleaning",
-  "laundry": "cleaning",
-  "wash": "cleaning",
-  "dishes": "cleaning",
-  "tidy": "cleaning",
-  "organize": "cleaning",
-  "dust": "cleaning",
-  "vacuum": "cleaning",
-  
-  // Relaxation related
-  "relax": "relaxation",
-  "rest": "relaxation",
-  "break": "relaxation",
-  "meditate": "relaxation",
-  "yoga": "relaxation",
-  
-  // Sleep related
-  "sleep": "sleep",
-  "nap": "sleep",
-  "bed": "sleep",
-  
-  // Travel related
-  "travel": "travel",
-  "trip": "travel",
-  "drive": "travel",
-  "commute": "travel",
-  "flight": "travel",
-  "journey": "travel",
-  "vacation": "travel",
-  
-  // Entertainment related
-  "play": "entertainment",
-  "game": "entertainment",
-  "movie": "entertainment",
-  "watch": "entertainment",
-  "tv": "entertainment",
-  "show": "entertainment",
-  "entertainment": "entertainment",
-  
-  // Social related
-  "friend": "social",
-  "party": "social",
-  "visit": "social",
-  "meet": "social",
-  "date": "social",
-  "family": "social",
-  
-  // Health related
-  "doctor": "health",
-  "appointment": "health",
-  "medicine": "health",
-  "therapy": "health",
-  "dentist": "health",
-  "checkup": "health"
-};
-
-/**
- * Get the appropriate category for a task
- */
-const getCategoryForTask = (taskDescription: string): TaskCategory => {
-  if (!taskDescription) return TASK_CATEGORIES.default;
-  
-  const normalizedDescription = taskDescription.toLowerCase();
-  const words = normalizedDescription.split(/\s+/);
-  
-  // Check if any word in the description matches our keywords
-  for (const word of words) {
-    const cleanWord = word.replace(/[^a-z]/g, '');
-    if (cleanWord && KEYWORD_TO_CATEGORY[cleanWord]) {
-      const categoryKey = KEYWORD_TO_CATEGORY[cleanWord];
-      return TASK_CATEGORIES[categoryKey];
-    }
+  if (lowerDesc.includes('exercise') || lowerDesc.includes('workout') || lowerDesc.includes('gym')) {
+    return '10b981'; // Emerald for exercise
+  } else if (lowerDesc.includes('meeting') || lowerDesc.includes('call') || lowerDesc.includes('work')) {
+    return '6366f1'; // Indigo for work/meetings
+  } else if (lowerDesc.includes('eat') || lowerDesc.includes('breakfast') || lowerDesc.includes('lunch') || lowerDesc.includes('dinner')) {
+    return 'f59e0b'; // Amber for food
+  } else if (lowerDesc.includes('read') || lowerDesc.includes('study') || lowerDesc.includes('book')) {
+    return 'a78bfa'; // Purple for study
   }
   
-  // If no direct word match, try to find a keyword within the description
-  for (const keyword of Object.keys(KEYWORD_TO_CATEGORY)) {
-    if (normalizedDescription.includes(keyword)) {
-      const categoryKey = KEYWORD_TO_CATEGORY[keyword];
-      return TASK_CATEGORIES[categoryKey];
-    }
-  }
-  
-  return TASK_CATEGORIES.default;
+  return '6366f1'; // Default indigo
 };
 
 /**
- * Icon text mapping for fallbacks
+ * Generate a simple fallback URL if API fails
  */
-const ICON_TEXT_MAP: Record<string, string> = {
-  "work": "WORK",
-  "meeting": "MEET",
-  "study": "STUDY",
-  "exercise": "GYM",
-  "food": "FOOD",
-  "shopping": "SHOP",
-  "cleaning": "CLEAN",
-  "relaxation": "RELAX",
-  "sleep": "SLEEP",
-  "travel": "TRAVEL",
-  "entertainment": "FUN",
-  "social": "SOCIAL",
-  "health": "HEALTH",
-  "default": "TASK"
-};
-
-/**
- * Generate a fallback image URL if the API fails
- */
-const generateFallbackImageUrl = (taskDescription: string): string => {
-  const category = getCategoryForTask(taskDescription);
-  // Instead of emojis which don't work well with the placeholder service,
-  // use simple text representations of the categories
-  const iconText = ICON_TEXT_MAP[category.name.toLowerCase()] || "TASK";
-  return `https://placehold.co/600x400/${category.color}/white?text=${iconText}`;
+const generateFallbackUrl = (taskDescription: string): string => {
+  const color = getFallbackColor(taskDescription);
+  // Just use the first character as a simple icon
+  const firstChar = taskDescription.trim()[0]?.toUpperCase() || 'T';
+  return `https://placehold.co/600x400/${color}/white?text=${firstChar}`;
 };
 
 /**
@@ -279,29 +48,15 @@ export const generateTaskImage = async (taskDescription: string): Promise<string
 
     if (!response.ok) {
       const errorData = await response.json();
-      console.warn(`Image generation failed: ${errorData.error}. Using fallback.`);
-      
-      // For rate limit errors, we'll delay future requests
-      if (response.status === 429) {
-        // Add a delay before allowing future image generation to let rate limits reset
-        await new Promise(resolve => setTimeout(resolve, 5000));
-      }
-      
-      return generateFallbackImageUrl(taskDescription);
+      console.warn(`Image generation failed: ${errorData.error || 'Unknown error'}`);
+      return generateFallbackUrl(taskDescription);
     }
 
     const data = await response.json() as ImageGenerationResponse;
-    
-    // If the server indicates this is a mock image,
-    // replace it with our client-side fallback that has categorical icons
-    if (data.isMock) {
-      return generateFallbackImageUrl(taskDescription);
-    }
-    
     return data.imageUrl;
   } catch (error) {
     console.error('Error generating task image:', error);
-    return generateFallbackImageUrl(taskDescription);
+    return generateFallbackUrl(taskDescription);
   }
 };
 
@@ -315,7 +70,7 @@ const imageCache = new Map<string, string>();
  */
 export const getTaskImage = async (taskDescription: string): Promise<string> => {
   if (!taskDescription || taskDescription.trim() === '') {
-    return generateFallbackImageUrl('Task');
+    return generateFallbackUrl('Task'); 
   }
   
   // Check if we already have this image cached
@@ -334,8 +89,6 @@ export const getTaskImage = async (taskDescription: string): Promise<string> => 
     return imageUrl;
   } catch (error) {
     console.error('Error in getTaskImage:', error);
-    const fallbackUrl = generateFallbackImageUrl(taskDescription);
-    imageCache.set(normalizedDescription, fallbackUrl);
-    return fallbackUrl;
+    return generateFallbackUrl(taskDescription);
   }
 };
