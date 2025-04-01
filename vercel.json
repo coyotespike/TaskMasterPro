@@ -1,15 +1,9 @@
 {
   "version": 2,
   "buildCommand": "bash .vercel/build.sh",
-  "outputDirectory": "dist",
-  "functions": {
-    "api/index.ts": {
-      "includeFiles": "dist/public/**"
-    }
-  },
+  "outputDirectory": "public",
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api" },
-    { "source": "/(.*)", "destination": "/api" }
+    { "source": "/api/(.*)", "destination": "/api" }
   ],
   "env": {
     "NODE_ENV": "production"
