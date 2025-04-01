@@ -5,61 +5,240 @@ interface ImageGenerationResponse {
   isMock?: boolean;
 }
 
-// Define category colors that will be used for fallback images
-const CATEGORY_COLORS: Record<string, string> = {
-  work: "6366f1", // Indigo
-  study: "8b5cf6", // Violet
-  personal: "ec4899", // Pink
-  health: "10b981", // Emerald
-  social: "f59e0b", // Amber
-  home: "0ea5e9", // Sky
-  default: "6366f1"  // Default to indigo
+/**
+ * Task categories with colors and emojis for better fallback images
+ */
+interface TaskCategory {
+  color: string;
+  icon: string; // Unicode emoji
+  name: string;
+}
+
+const TASK_CATEGORIES: Record<string, TaskCategory> = {
+  work: {
+    color: "6366f1", // Indigo
+    icon: "💼",
+    name: "Work"
+  },
+  meeting: {
+    color: "8b5cf6", // Violet
+    icon: "👥",
+    name: "Meeting"
+  },
+  study: {
+    color: "a78bfa", // Purple
+    icon: "📚",
+    name: "Study"
+  },
+  exercise: {
+    color: "10b981", // Emerald
+    icon: "🏃",
+    name: "Exercise"
+  },
+  food: {
+    color: "f59e0b", // Amber
+    icon: "🍽️",
+    name: "Food"
+  },
+  shopping: {
+    color: "ec4899", // Pink
+    icon: "🛒",
+    name: "Shopping"
+  },
+  cleaning: {
+    color: "06b6d4", // Cyan
+    icon: "🧹",
+    name: "Cleaning"
+  },
+  relaxation: {
+    color: "3b82f6", // Blue
+    icon: "🧘",
+    name: "Relaxation"
+  },
+  sleep: {
+    color: "6366f1", // Indigo
+    icon: "😴",
+    name: "Sleep"
+  },
+  travel: {
+    color: "f97316", // Orange
+    icon: "✈️",
+    name: "Travel"
+  },
+  entertainment: {
+    color: "ec4899", // Pink
+    icon: "🎮",
+    name: "Entertainment"
+  },
+  social: {
+    color: "f59e0b", // Amber
+    icon: "🎉",
+    name: "Social"
+  },
+  health: {
+    color: "14b8a6", // Teal
+    icon: "💊",
+    name: "Health"
+  },
+  default: {
+    color: "6366f1", // Indigo
+    icon: "📋",
+    name: "Task"
+  }
 };
 
 /**
- * Get a color code based on task description
+ * Keyword mappings to categories
  */
-const getCategoryColor = (taskDescription: string): string => {
-  const normalizedDescription = taskDescription.toLowerCase();
+const KEYWORD_TO_CATEGORY: Record<string, string> = {
+  // Work related
+  "work": "work",
+  "job": "work",
+  "project": "work",
+  "email": "work",
+  "report": "work",
+  "office": "work",
+  "business": "work",
   
-  // Try to categorize the task based on keywords
-  if (normalizedDescription.includes("work") || 
-      normalizedDescription.includes("meeting") || 
-      normalizedDescription.includes("email") || 
-      normalizedDescription.includes("project")) {
-    return CATEGORY_COLORS.work;
-  } else if (normalizedDescription.includes("study") || 
-             normalizedDescription.includes("learn") || 
-             normalizedDescription.includes("read") || 
-             normalizedDescription.includes("homework")) {
-    return CATEGORY_COLORS.study;
-  } else if (normalizedDescription.includes("gym") || 
-             normalizedDescription.includes("workout") || 
-             normalizedDescription.includes("exercise") || 
-             normalizedDescription.includes("health")) {
-    return CATEGORY_COLORS.health;
-  } else if (normalizedDescription.includes("friend") || 
-             normalizedDescription.includes("party") || 
-             normalizedDescription.includes("lunch") || 
-             normalizedDescription.includes("dinner")) {
-    return CATEGORY_COLORS.social;
-  } else if (normalizedDescription.includes("clean") || 
-             normalizedDescription.includes("laundry") || 
-             normalizedDescription.includes("cook") || 
-             normalizedDescription.includes("home")) {
-    return CATEGORY_COLORS.home;
-  } else {
-    return CATEGORY_COLORS.default;
+  // Meetings
+  "meeting": "meeting",
+  "call": "meeting",
+  "presentation": "meeting",
+  "conference": "meeting",
+  "zoom": "meeting",
+  "interview": "meeting",
+  
+  // Study related
+  "study": "study",
+  "read": "study",
+  "learn": "study",
+  "homework": "study", 
+  "research": "study",
+  "class": "study",
+  "book": "study",
+  "lecture": "study",
+  
+  // Exercise related
+  "exercise": "exercise",
+  "workout": "exercise",
+  "gym": "exercise",
+  "run": "exercise",
+  "jog": "exercise",
+  "fitness": "exercise",
+  "sport": "exercise",
+  "training": "exercise",
+  
+  // Food related
+  "eat": "food",
+  "lunch": "food",
+  "dinner": "food",
+  "breakfast": "food",
+  "cook": "food", 
+  "meal": "food",
+  "food": "food",
+  "restaurant": "food",
+  
+  // Shopping related
+  "shop": "shopping",
+  "buy": "shopping",
+  "purchase": "shopping",
+  "store": "shopping",
+  "mall": "shopping",
+  "grocery": "shopping",
+  "market": "shopping",
+  
+  // Cleaning related
+  "clean": "cleaning",
+  "laundry": "cleaning",
+  "wash": "cleaning",
+  "dishes": "cleaning",
+  "tidy": "cleaning",
+  "organize": "cleaning",
+  "dust": "cleaning",
+  "vacuum": "cleaning",
+  
+  // Relaxation related
+  "relax": "relaxation",
+  "rest": "relaxation",
+  "break": "relaxation",
+  "meditate": "relaxation",
+  "yoga": "relaxation",
+  
+  // Sleep related
+  "sleep": "sleep",
+  "nap": "sleep",
+  "bed": "sleep",
+  
+  // Travel related
+  "travel": "travel",
+  "trip": "travel",
+  "drive": "travel",
+  "commute": "travel",
+  "flight": "travel",
+  "journey": "travel",
+  "vacation": "travel",
+  
+  // Entertainment related
+  "play": "entertainment",
+  "game": "entertainment",
+  "movie": "entertainment",
+  "watch": "entertainment",
+  "tv": "entertainment",
+  "show": "entertainment",
+  "entertainment": "entertainment",
+  
+  // Social related
+  "friend": "social",
+  "party": "social",
+  "visit": "social",
+  "meet": "social",
+  "date": "social",
+  "family": "social",
+  
+  // Health related
+  "doctor": "health",
+  "appointment": "health",
+  "medicine": "health",
+  "therapy": "health",
+  "dentist": "health",
+  "checkup": "health"
+};
+
+/**
+ * Get the appropriate category for a task
+ */
+const getCategoryForTask = (taskDescription: string): TaskCategory => {
+  if (!taskDescription) return TASK_CATEGORIES.default;
+  
+  const normalizedDescription = taskDescription.toLowerCase();
+  const words = normalizedDescription.split(/\s+/);
+  
+  // Check if any word in the description matches our keywords
+  for (const word of words) {
+    const cleanWord = word.replace(/[^a-z]/g, '');
+    if (cleanWord && KEYWORD_TO_CATEGORY[cleanWord]) {
+      const categoryKey = KEYWORD_TO_CATEGORY[cleanWord];
+      return TASK_CATEGORIES[categoryKey];
+    }
   }
+  
+  // If no direct word match, try to find a keyword within the description
+  for (const keyword of Object.keys(KEYWORD_TO_CATEGORY)) {
+    if (normalizedDescription.includes(keyword)) {
+      const categoryKey = KEYWORD_TO_CATEGORY[keyword];
+      return TASK_CATEGORIES[categoryKey];
+    }
+  }
+  
+  return TASK_CATEGORIES.default;
 };
 
 /**
  * Generate a fallback image URL if the API fails
  */
 const generateFallbackImageUrl = (taskDescription: string): string => {
-  const color = getCategoryColor(taskDescription);
-  const text = encodeURIComponent(taskDescription.trim().substring(0, 15));
-  return `https://placehold.co/600x400/${color}/white?text=${text}`;
+  const category = getCategoryForTask(taskDescription);
+  return `https://placehold.co/600x400/${category.color}/white?text=${encodeURIComponent(category.icon)}`;
 };
 
 /**

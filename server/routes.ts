@@ -32,7 +32,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // API endpoint for generating task images
   app.post('/api/generate-image', async (req, res) => {
     try {
-      const { taskDescription } = req.body;
+      const { taskDescription } = req.body as { taskDescription: string };
       
       if (!taskDescription) {
         return res.status(400).json({ error: 'Task description is required' });
@@ -66,8 +66,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log(`Generating image for task: "${taskDescription}"`);
       
-      // Create a simplified prompt for the image
-      const prompt = `A simple, colorful, minimalist icon representing the task: "${taskDescription}". Use bright colors, simple shapes, and a clean design. The icon should be centered and have a solid background. Make it suitable as a small task icon.`;
+      // Create a conceptual prompt for the image that focuses on the task meaning, not text
+      let cleanDescription = taskDescription.replace(/[^a-zA-Z0-9\s-]/g, ''); // Remove special characters
+      
+      // Extract the main concept from the task description
+      const conceptKeywords = cleanDescription.toLowerCase()
+        .split(' ')
+        .filter((word: string) => 
+          !['the', 'a', 'an', 'to', 'for', 'in', 'on', 'at', 'by', 'with', 'and', 'or', 'of'].includes(word)
+        );
+      
+      // Identify key activities or objects in the task
+      let concept = '';
+      if (cleanDescription.toLowerCase().includes('exercise') || 
+          cleanDescription.toLowerCase().includes('run') || 
+          cleanDescription.toLowerCase().includes('workout')) {
+        concept = 'exercise, runner, fitness, workout';
+      } else if (cleanDescription.toLowerCase().includes('meeting') || 
+                cleanDescription.toLowerCase().includes('call')) {
+        concept = 'business meeting, conference call, video chat, collaboration';
+      } else if (cleanDescription.toLowerCase().includes('study') || 
+                cleanDescription.toLowerCase().includes('read')) {
+        concept = 'study, book, learning, education, knowledge';
+      } else if (cleanDescription.toLowerCase().includes('eat') || 
+                cleanDescription.toLowerCase().includes('lunch') || 
+                cleanDescription.toLowerCase().includes('dinner') || 
+                cleanDescription.toLowerCase().includes('breakfast')) {
+        concept = 'meal, food, dining, eating, restaurant';
+      } else if (cleanDescription.toLowerCase().includes('clean') || 
+                cleanDescription.toLowerCase().includes('laundry') || 
+                cleanDescription.toLowerCase().includes('dishes')) {
+        concept = 'cleaning, home maintenance, housework';
+      } else if (cleanDescription.toLowerCase().includes('shop') || 
+                cleanDescription.toLowerCase().includes('buy') || 
+                cleanDescription.toLowerCase().includes('purchase')) {
+        concept = 'shopping, retail, store, purchase';
+      } else if (cleanDescription.toLowerCase().includes('travel') || 
+                cleanDescription.toLowerCase().includes('drive') || 
+                cleanDescription.toLowerCase().includes('flight')) {
+        concept = 'travel, transportation, journey, vacation';
+      } else {
+        // Use the first few meaningful keywords if no specific category is found
+        concept = conceptKeywords.slice(0, 3).join(', ');
+      }
+      
+      // Create the prompt focusing on the conceptual meaning rather than the text description
+      const prompt = `Create a simple, vibrant, minimalist icon representing the concept of "${concept}". 
+      Do not include any text or letters. Use bright, solid colors and simple geometric shapes that clearly 
+      convey the activity or object. The image should be a centered icon on a solid background color that 
+      relates to the concept. Make it instantly recognizable as representing ${concept}.`;
 
       // Set a timeout to prevent hanging indefinitely
       const timeoutPromise = new Promise((_, reject) => {
