@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "buildCommand": "cp package.json.nextjs package.json && npm install && npm run build",
+  "buildCommand": "./build-fix.sh",
   "devCommand": "npm run dev",
   "outputDirectory": "out",
   "framework": null,

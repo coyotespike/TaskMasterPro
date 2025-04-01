@@ -18,24 +18,16 @@ const getApiConfig = async (): Promise<ApiConfig> => {
   if (cachedConfig) {
     return cachedConfig;
   }
-  
+
   const defaultConfig: ApiConfig = {
     apiKey: "",
     apiProvider: "openai",
     useMockResponses: false
   };
   
-  // First try from environment variables (for local development)
-  const envApiKey = import.meta.env.VITE_OPENAI_API_KEY;
-  if (envApiKey) {
-    cachedConfig = {
-      ...defaultConfig,
-      apiKey: envApiKey
-    };
-    return cachedConfig;
-  }
+  // In Next.js, we'll only use the API to fetch config values
   
-  // Then try to fetch from our server endpoint
+  // Try to fetch from our server endpoint
   try {
     const response = await fetch('/api/config');
     if (response.ok) {
