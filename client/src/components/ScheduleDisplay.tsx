@@ -16,6 +16,7 @@ const ScheduleDisplay = ({ schedule, isLoading, error, explanation }: ScheduleDi
   const hasSchedule = schedule && schedule.length > 0 && explanation;
   const [taskImages, setTaskImages] = useState<Record<string, string>>({});
   const [loadingImages, setLoadingImages] = useState<Record<string, boolean>>({});
+  const [imagesProgress, setImagesProgress] = useState<{total: number; loaded: number}>({ total: 0, loaded: 0 });
 
   // Load images for each task when schedule changes
   useEffect(() => {
@@ -26,6 +27,12 @@ const ScheduleDisplay = ({ schedule, isLoading, error, explanation }: ScheduleDi
       );
       
       if (tasksNeedingImages.length === 0) return;
+      
+      // Update total images progress
+      setImagesProgress({
+        total: schedule.length,
+        loaded: schedule.length - tasksNeedingImages.length
+      });
       
       // Mark these tasks as loading
       const newLoadingState = { ...loadingImages };
@@ -41,6 +48,11 @@ const ScheduleDisplay = ({ schedule, isLoading, error, explanation }: ScheduleDi
           setTaskImages(prev => ({
             ...prev,
             [item.taskDescription]: imageUrl
+          }));
+          // Update progress after each successful load
+          setImagesProgress(prev => ({
+            total: prev.total,
+            loaded: prev.loaded + 1
           }));
         } catch (error) {
           console.error(`Failed to load image for task: ${item.taskDescription}`, error);
@@ -152,8 +164,24 @@ const ScheduleDisplay = ({ schedule, isLoading, error, explanation }: ScheduleDi
       {explanation && <ExplanationCard explanation={explanation} />}
       
       <Card>
-        <CardHeader>
-          <CardTitle className="text-xl font-semibold">Your Optimized Schedule</CardTitle>
+        <CardHeader className="pb-2">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-xl font-semibold">Your Optimized Schedule</CardTitle>
+            
+            {imagesProgress.total > 0 && imagesProgress.loaded < imagesProgress.total && (
+              <div className="flex items-center space-x-2">
+                <div className="text-sm text-gray-500 dark:text-gray-400">
+                  Generating images: {imagesProgress.loaded}/{imagesProgress.total}
+                </div>
+                <div className="relative w-16 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                  <div 
+                    className="absolute top-0 left-0 h-full bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-full transition-all duration-300"
+                    style={{ width: `${(imagesProgress.loaded / imagesProgress.total) * 100}%` }}
+                  ></div>
+                </div>
+              </div>
+            )}
+          </div>
         </CardHeader>
         <CardContent>
           <div className="relative ml-4">
