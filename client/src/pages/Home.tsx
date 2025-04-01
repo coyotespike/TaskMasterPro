@@ -4,6 +4,8 @@ import TaskList from '@/components/TaskList';
 import ScheduleDisplay from '@/components/ScheduleDisplay';
 import { usePlanner } from '@/hooks/usePlanner';
 import { CalendarClock, Sparkles } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import LoadingIndicator from '@/components/LoadingIndicator';
 
 const Home = () => {
   const { 
@@ -11,16 +13,30 @@ const Home = () => {
     schedule,
     explanation,
     isLoading,
+    isLoadingImages,
+    isProcessing,
+    imageProgress,
     error,
     addTask,
     removeTask,
     generateTaskSchedule,
-    clearError
+    clearError,
+    taskImageCache
   } = usePlanner();
 
   useEffect(() => {
     document.title = 'AI Task Planner';
   }, []);
+
+  // Determine what's currently loading
+  const getLoadingState = () => {
+    if (isLoading) return 'schedule';
+    if (isLoadingImages) return 'images';
+    return null;
+  };
+
+  // If images are loading but the schedule is displayed, this is special handling
+  const showImageLoadingIndicator = isLoadingImages && schedule && schedule.length > 0;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-indigo-50/30 dark:from-gray-900 dark:to-gray-800/30">
@@ -50,18 +66,43 @@ const Home = () => {
               tasks={tasks} 
               onRemoveTask={removeTask} 
               onGenerateSchedule={generateTaskSchedule}
-              isLoading={isLoading}
+              isLoading={isProcessing} // Use combined loading state
             />
           </div>
 
           {/* Right Column: Schedule Output */}
           <div className="lg:col-span-7 space-y-6">
-            <ScheduleDisplay 
-              schedule={schedule || []} 
-              isLoading={isLoading}
-              error={error}
-              explanation={explanation}
-            />
+            {/* Display image loading indicator if only images are loading */}
+            {showImageLoadingIndicator ? (
+              <div className="space-y-6">
+                {explanation && <div className="mb-4">
+                  <Card className="p-4">
+                    <CardContent className="p-2">
+                      <LoadingIndicator 
+                        stage="images" 
+                        message="Generating task visualizations..."
+                        subMessage="Creating visual representations for your tasks"
+                        progress={imageProgress.loaded / imageProgress.total * 100}
+                      />
+                    </CardContent>
+                  </Card>
+                </div>}
+                
+                <ScheduleDisplay 
+                  schedule={schedule || []} 
+                  isLoading={isLoading}
+                  error={error}
+                  explanation={explanation}
+                />
+              </div>
+            ) : (
+              <ScheduleDisplay 
+                schedule={schedule || []} 
+                isLoading={isLoading}
+                error={error}
+                explanation={explanation}
+              />
+            )}
           </div>
         </main>
         

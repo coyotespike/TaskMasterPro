@@ -121,12 +121,16 @@ const ScheduleDisplay = ({ schedule, isLoading, error, explanation }: ScheduleDi
     );
   }
 
-  // Loading state
+  // Loading state - show different loading indicators for schedule generation and image loading
   if (isLoading) {
     return (
       <Card className="p-8">
         <CardContent className="pt-0">
-          <LoadingIndicator />
+          <LoadingIndicator 
+            stage="schedule"
+            message="Optimizing your schedule..." 
+            subMessage="Our AI is creating the best arrangement for your tasks" 
+          />
         </CardContent>
       </Card>
     );

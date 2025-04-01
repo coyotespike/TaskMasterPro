@@ -1,7 +1,8 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { Task, ScheduleItem, PlannerResponse } from '@shared/schema';
 import { generateSchedule } from '@/services/llmService';
+import { getTaskImage } from '@/services/imageService';
 import { PlannerState } from '@/types';
 
 export const usePlanner = () => {
@@ -10,8 +11,16 @@ export const usePlanner = () => {
     schedule: null,
     explanation: null,
     isLoading: false,
+    isLoadingImages: false,
     error: null,
+    imageProgress: {
+      total: 0,
+      loaded: 0
+    }
   });
+
+  // In-memory cache for task images
+  const [taskImageCache] = useState<Record<string, string>>({});
 
   const addTask = useCallback((description: string) => {
     setState((prevState) => ({
@@ -40,6 +49,66 @@ export const usePlanner = () => {
     }));
   }, []);
 
+  // Load images for tasks in the schedule
+  useEffect(() => {
+    const loadTaskImages = async () => {
+      // Only run if we have a schedule and aren't already loading images
+      if (!state.schedule || state.isLoadingImages || state.schedule.length === 0) {
+        return;
+      }
+
+      // Find tasks that need images generated
+      const tasksNeedingImages = state.schedule.filter(
+        item => !taskImageCache[item.taskDescription]
+      );
+
+      if (tasksNeedingImages.length === 0) {
+        return;
+      }
+
+      // Start loading images
+      setState(prev => ({
+        ...prev,
+        isLoadingImages: true,
+        imageProgress: {
+          total: tasksNeedingImages.length,
+          loaded: 0
+        }
+      }));
+
+      // Process tasks one by one to show progress
+      for (let i = 0; i < tasksNeedingImages.length; i++) {
+        const task = tasksNeedingImages[i];
+        try {
+          // Fetch the image for this task
+          const imageUrl = await getTaskImage(task.taskDescription);
+          
+          // Update the cache
+          taskImageCache[task.taskDescription] = imageUrl;
+          
+          // Update progress
+          setState(prev => ({
+            ...prev,
+            imageProgress: {
+              ...prev.imageProgress,
+              loaded: prev.imageProgress.loaded + 1
+            }
+          }));
+        } catch (error) {
+          console.error(`Failed to generate image for task: ${task.taskDescription}`, error);
+        }
+      }
+
+      // All images loaded
+      setState(prev => ({
+        ...prev,
+        isLoadingImages: false
+      }));
+    };
+
+    loadTaskImages();
+  }, [state.schedule, state.isLoadingImages, taskImageCache]);
+
   const generateTaskSchedule = useCallback(async () => {
     if (state.tasks.length === 0) {
       setState((prevState) => ({
@@ -49,9 +118,14 @@ export const usePlanner = () => {
       return;
     }
 
+    // Reset any existing schedule and start loading
     setState((prevState) => ({
       ...prevState,
+      schedule: null,
+      explanation: null,
       isLoading: true,
+      isLoadingImages: false,
+      imageProgress: { total: 0, loaded: 0 },
       error: null,
     }));
 
@@ -63,6 +137,7 @@ export const usePlanner = () => {
         schedule: plannerResponse.schedule,
         explanation: plannerResponse.explanation,
         isLoading: false,
+        // Image loading will begin automatically via the useEffect
       }));
     } catch (error) {
       console.error('Error generating schedule:', error);
@@ -75,11 +150,16 @@ export const usePlanner = () => {
     }
   }, [state.tasks]);
 
+  // Combine both loading states
+  const isProcessing = state.isLoading || state.isLoadingImages;
+
   return {
     ...state,
+    isProcessing,
     addTask,
     removeTask,
     generateTaskSchedule,
     clearError,
+    taskImageCache,
   };
 };

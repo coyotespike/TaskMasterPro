@@ -26,6 +26,8 @@ export interface ScheduleDisplayProps {
 export interface LoadingIndicatorProps {
   message?: string;
   subMessage?: string;
+  stage?: 'schedule' | 'images' | 'combined';
+  progress?: number;
 }
 
 export interface PlannerState {
@@ -33,7 +35,12 @@ export interface PlannerState {
   schedule: ScheduleItem[] | null;
   explanation: string | null;
   isLoading: boolean;
+  isLoadingImages: boolean;
   error: string | null;
+  imageProgress: {
+    total: number;
+    loaded: number;
+  };
 }
 
 export interface ApiError {
