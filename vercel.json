@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "buildCommand": "./build-fix.sh",
+  "buildCommand": "npm install && npm run build",
   "devCommand": "npm run dev",
   "outputDirectory": "out",
   "framework": null,
