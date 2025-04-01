@@ -4,20 +4,35 @@ import { ApiError } from "@/types";
 const OPENAI_API_URL = "https://api.openai.com/v1/chat/completions";
 const ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages";
 
-// Get API key from environment variables or API
-let cachedApiKey: string | null = null;
+// Configuration state
+interface ApiConfig {
+  apiKey: string;
+  apiProvider: "openai" | "anthropic";
+  useMockResponses: boolean;
+}
 
-const getApiKey = async (): Promise<string> => {
-  // If we already fetched the API key, return it
-  if (cachedApiKey) {
-    return cachedApiKey;
+let cachedConfig: ApiConfig | null = null;
+
+const getApiConfig = async (): Promise<ApiConfig> => {
+  // If we already fetched the config, return it
+  if (cachedConfig) {
+    return cachedConfig;
   }
+  
+  const defaultConfig: ApiConfig = {
+    apiKey: "",
+    apiProvider: "openai",
+    useMockResponses: false
+  };
   
   // First try from environment variables (for local development)
   const envApiKey = import.meta.env.VITE_OPENAI_API_KEY;
   if (envApiKey) {
-    cachedApiKey = envApiKey;
-    return envApiKey;
+    cachedConfig = {
+      ...defaultConfig,
+      apiKey: envApiKey
+    };
+    return cachedConfig;
   }
   
   // Then try to fetch from our server endpoint
@@ -25,22 +40,38 @@ const getApiKey = async (): Promise<string> => {
     const response = await fetch('/api/config');
     if (response.ok) {
       const config = await response.json();
-      if (config.openaiApiKey) {
-        cachedApiKey = config.openaiApiKey;
-        return config.openaiApiKey;
-      }
+      
+      cachedConfig = {
+        apiKey: config.openaiApiKey || "",
+        apiProvider: (config.apiProvider === "anthropic" ? "anthropic" : "openai") as "openai" | "anthropic",
+        useMockResponses: config.useMockResponses || false
+      };
+      
+      return cachedConfig;
     }
   } catch (error) {
-    console.error('Error fetching API key from server:', error);
+    console.error('Error fetching config from server:', error);
   }
   
-  return "";
+  return defaultConfig;
 };
 
-// Get API provider from environment variables or default to OpenAI
-const getApiProvider = (): "openai" | "anthropic" => {
-  const provider = import.meta.env.VITE_API_PROVIDER || "openai";
-  return provider === "anthropic" ? "anthropic" : "openai";
+// Helper function to get the API key
+const getApiKey = async (): Promise<string> => {
+  const config = await getApiConfig();
+  return config.apiKey;
+};
+
+// Helper function to get the API provider
+const getApiProvider = async (): Promise<"openai" | "anthropic"> => {
+  const config = await getApiConfig();
+  return config.apiProvider;
+};
+
+// Helper function to check if we should use mock responses
+const shouldUseMockResponses = async (): Promise<boolean> => {
+  const config = await getApiConfig();
+  return config.useMockResponses;
 };
 
 // Create a prompt for the LLM
@@ -215,15 +246,51 @@ const callAnthropic = async (tasks: Task[]): Promise<PlannerResponse> => {
   }
 };
 
+// Mock schedule generation for development
+const generateMockSchedule = (tasks: Task[]): PlannerResponse => {
+  const scheduleItems: ScheduleItem[] = [];
+  let currentTime = 9; // Start at 9 AM
+  
+  for (const task of tasks) {
+    // Add task to schedule
+    scheduleItems.push({
+      time: `${currentTime}:00 AM`,
+      taskDescription: task.description
+    });
+    
+    // Increment time by 1-2 hours
+    currentTime += 1 + Math.floor(Math.random() * 2);
+    
+    // Convert to PM after noon
+    if (currentTime >= 12) {
+      const adjustedTime = currentTime > 12 ? currentTime - 12 : currentTime;
+      scheduleItems[scheduleItems.length - 1].time = `${adjustedTime}:00 PM`;
+    }
+  }
+  
+  return {
+    explanation: "This is a mock schedule generated for development purposes. The tasks are arranged in the order provided with reasonable time intervals.",
+    schedule: scheduleItems
+  };
+};
+
 // Main function to generate schedule
 export const generateSchedule = async (tasks: Task[]): Promise<PlannerResponse> => {
   if (!tasks.length) {
     throw new Error("No tasks provided. Please add at least one task.");
   }
   
-  const apiProvider = getApiProvider();
-  
   try {
+    // Check if we should use mock responses
+    const useMockResponses = await shouldUseMockResponses();
+    if (useMockResponses) {
+      console.log("Using mock schedule response");
+      return generateMockSchedule(tasks);
+    }
+    
+    // Get API provider
+    const apiProvider = await getApiProvider();
+    
     if (apiProvider === "anthropic") {
       return await callAnthropic(tasks);
     } else {
@@ -231,6 +298,14 @@ export const generateSchedule = async (tasks: Task[]): Promise<PlannerResponse> 
     }
   } catch (error) {
     console.error("Schedule generation error:", error);
+    
+    // If the error is related to API keys or authentication, we should show a clear message
+    if (error instanceof Error) {
+      if (error.message.includes("API key") || error.message.includes("authentication")) {
+        throw new Error("The OpenAI API key appears to be invalid or missing. Please check your API key configuration.");
+      }
+    }
+    
     throw error;
   }
 };
