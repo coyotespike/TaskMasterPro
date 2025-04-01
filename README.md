@@ -2,8 +2,6 @@
 
 An AI-powered task planning application that generates optimized daily schedules with intelligent insights and user-friendly design. Made with Claude, Replit, ChatGPT, Vercel.
 
-Test
-
 ## Features
 
 - Intelligent schedule generation with OpenAI
