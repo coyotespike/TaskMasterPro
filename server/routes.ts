@@ -54,7 +54,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Return a placeholder image URL after a short delay to simulate API call
         return setTimeout(() => {
           res.json({ 
-            imageUrl: 'https://placehold.co/600x400/6366f1/white?text=Task+Icon',
+            imageUrl: 'https://placehold.co/600x400/6366f1/white?text=TASK',
             isMock: true
           });
         }, 500);

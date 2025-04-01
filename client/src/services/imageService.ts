@@ -234,11 +234,34 @@ const getCategoryForTask = (taskDescription: string): TaskCategory => {
 };
 
 /**
+ * Icon text mapping for fallbacks
+ */
+const ICON_TEXT_MAP: Record<string, string> = {
+  "work": "WORK",
+  "meeting": "MEET",
+  "study": "STUDY",
+  "exercise": "GYM",
+  "food": "FOOD",
+  "shopping": "SHOP",
+  "cleaning": "CLEAN",
+  "relaxation": "RELAX",
+  "sleep": "SLEEP",
+  "travel": "TRAVEL",
+  "entertainment": "FUN",
+  "social": "SOCIAL",
+  "health": "HEALTH",
+  "default": "TASK"
+};
+
+/**
  * Generate a fallback image URL if the API fails
  */
 const generateFallbackImageUrl = (taskDescription: string): string => {
   const category = getCategoryForTask(taskDescription);
-  return `https://placehold.co/600x400/${category.color}/white?text=${encodeURIComponent(category.icon)}`;
+  // Instead of emojis which don't work well with the placeholder service,
+  // use simple text representations of the categories
+  const iconText = ICON_TEXT_MAP[category.name.toLowerCase()] || "TASK";
+  return `https://placehold.co/600x400/${category.color}/white?text=${iconText}`;
 };
 
 /**
@@ -262,9 +285,9 @@ export const generateTaskImage = async (taskDescription: string): Promise<string
 
     const data = await response.json() as ImageGenerationResponse;
     
-    // If the server indicates this is a mock image, but doesn't contain the task name,
-    // replace it with our client-side fallback that has the task name embedded
-    if (data.isMock && data.imageUrl.includes('Task+Icon')) {
+    // If the server indicates this is a mock image,
+    // replace it with our client-side fallback that has categorical icons
+    if (data.isMock) {
       return generateFallbackImageUrl(taskDescription);
     }
     
