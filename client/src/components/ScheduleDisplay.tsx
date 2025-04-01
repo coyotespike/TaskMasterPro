@@ -1,12 +1,54 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import LoadingIndicator from "./LoadingIndicator";
 import ExplanationCard from "./ExplanationCard";
-import { AlertCircle, Clock } from "lucide-react";
+import { 
+  AlertCircle, Clock, Coffee, Briefcase, Book, 
+  ShoppingCart, Dumbbell, Utensils, HeartPulse, 
+  Bike, Phone, Mail, Music, VideoIcon, Users, Home 
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScheduleDisplayProps } from "@/types";
 
 const ScheduleDisplay = ({ schedule, isLoading, error, explanation }: ScheduleDisplayProps) => {
   const hasSchedule = schedule && schedule.length > 0 && explanation;
+  
+  // Function to determine which icon to show based on task description
+  const getTaskIcon = (taskDescription: string) => {
+    const description = taskDescription.toLowerCase();
+    
+    if (description.includes('coffee') || description.includes('tea') || description.includes('breakfast')) {
+      return <Coffee className="h-4 w-4 text-white" />;
+    } else if (description.includes('work') || description.includes('meeting') || description.includes('call') || description.includes('email')) {
+      return <Briefcase className="h-4 w-4 text-white" />;
+    } else if (description.includes('read') || description.includes('study') || description.includes('learning')) {
+      return <Book className="h-4 w-4 text-white" />;
+    } else if (description.includes('shop') || description.includes('buy') || description.includes('purchase')) {
+      return <ShoppingCart className="h-4 w-4 text-white" />;
+    } else if (description.includes('workout') || description.includes('exercise') || description.includes('gym') || description.includes('run')) {
+      return <Dumbbell className="h-4 w-4 text-white" />;
+    } else if (description.includes('lunch') || description.includes('dinner') || description.includes('eat') || description.includes('food')) {
+      return <Utensils className="h-4 w-4 text-white" />;
+    } else if (description.includes('doctor') || description.includes('health') || description.includes('appointment')) {
+      return <HeartPulse className="h-4 w-4 text-white" />;
+    } else if (description.includes('bike') || description.includes('cycling') || description.includes('travel')) {
+      return <Bike className="h-4 w-4 text-white" />;
+    } else if (description.includes('call') || description.includes('phone')) {
+      return <Phone className="h-4 w-4 text-white" />;
+    } else if (description.includes('mail') || description.includes('post')) {
+      return <Mail className="h-4 w-4 text-white" />;
+    } else if (description.includes('music') || description.includes('listen') || description.includes('song')) {
+      return <Music className="h-4 w-4 text-white" />;
+    } else if (description.includes('video') || description.includes('movie') || description.includes('watch')) {
+      return <VideoIcon className="h-4 w-4 text-white" />;
+    } else if (description.includes('friend') || description.includes('family') || description.includes('social') || description.includes('meet')) {
+      return <Users className="h-4 w-4 text-white" />;
+    } else if (description.includes('home') || description.includes('clean') || description.includes('house')) {
+      return <Home className="h-4 w-4 text-white" />;
+    }
+    
+    // Default icon
+    return <Clock className="h-4 w-4 text-white" />;
+  };
 
   // Empty state
   if (!hasSchedule && !isLoading && !error) {
@@ -79,7 +121,7 @@ const ScheduleDisplay = ({ schedule, isLoading, error, explanation }: ScheduleDi
               <div key={index} className="relative z-10 mb-8">
                 <div className="flex items-center">
                   <div className="bg-primary dark:bg-indigo-600 h-8 w-8 rounded-full flex items-center justify-center -ml-4 ring-4 ring-white dark:ring-gray-800">
-                    <Clock className="h-4 w-4 text-white" />
+                    {getTaskIcon(item.taskDescription)}
                   </div>
                   <div className="ml-4 font-medium text-primary dark:text-indigo-400">
                     {item.time}
