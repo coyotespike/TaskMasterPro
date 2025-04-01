@@ -1,0 +1,149 @@
+# Task Planning App - Development Requirements
+
+## Tech Stack
+- TypeScript
+- React
+- Tailwind CSS
+
+## Development Phases
+
+### Phase 1: Project Setup & UI Components
+- [ ] Initialize a React + TypeScript project with Vite
+- [ ] Configure Tailwind CSS
+- [ ] Set up ESLint and Prettier
+- [ ] Create component structure
+- [ ] Implement responsive layout
+- [ ] Build task input components
+- [ ] Add task list management (add/remove functionality)
+
+**Checkpoint 1:** Verify UI components render correctly and are responsive
+
+### Phase 2: LLM API Integration
+- [ ] Create API service module
+- [ ] Implement environment variable handling for API keys
+- [ ] Build the prompt construction function
+- [ ] Create API request and response handling
+- [ ] Implement loading state during API calls
+- [ ] Add error handling for API failures
+
+**Checkpoint 2:** Write tests to verify API integration
+```typescript
+// Example test to verify API connection
+test('LLM API call returns valid response', async () => {
+  const tasks = ['Go for a 20 minute run', 'Mow the lawn'];
+  const response = await plannerService.generateSchedule(tasks);
+  expect(response).toHaveProperty('schedule');
+  expect(response).toHaveProperty('explanation');
+});
+```
+
+### Phase 3: Schedule Visualization
+- [ ] Design and implement the schedule display component
+- [ ] Create the explanation component
+- [ ] Connect API responses to the visualization
+- [ ] Add responsive styling for different screen sizes
+- [ ] Implement engaging visual elements (colors, spacing, typography)
+- [ ] Ensure accessibility standards
+
+**Checkpoint 3:** Verify the visualization renders correctly with sample data
+
+### Phase 4: Integration & Polish
+- [ ] Connect all components in main application flow
+- [ ] Add transitions between application states
+- [ ] Implement error states and user feedback
+- [ ] Optimize performance
+- [ ] Add final styling touches
+- [ ] Conduct cross-browser testing
+
+**Checkpoint 4:** End-to-end testing of the complete application flow
+
+## Component Structure
+```
+src/
+├── components/
+│   ├── TaskInput.tsx
+│   ├── TaskList.tsx
+│   ├── LoadingIndicator.tsx
+│   ├── ScheduleDisplay.tsx
+│   └── ExplanationCard.tsx
+├── services/
+│   └── llmService.ts
+├── types/
+│   └── index.ts
+├── hooks/
+│   └── usePlanner.ts
+└── App.tsx
+```
+
+## Detailed Requirements
+
+### Task Input & Management
+- Use Tailwind's form styling
+- Implement controlled components with TypeScript interfaces
+- Store tasks in React state with proper typing
+- Validate input (no empty tasks, reasonable length)
+
+### API Integration
+- Create a typed service for API calls
+- Use React Query or similar for API state management
+- Handle API errors gracefully with user feedback
+- Structure the prompt to get consistently formatted responses
+
+### Schedule Visualization
+- Use Tailwind's card and grid components
+- Implement a visually appealing timeline-style layout
+- Use appropriate color coding and spacing
+- Ensure the explanation stands out visually
+
+### Types
+```typescript
+interface Task {
+  id: string;
+  description: string;
+}
+
+interface ScheduleItem {
+  time: string;
+  taskDescription: string;
+}
+
+interface PlannerResponse {
+  schedule: ScheduleItem[];
+  explanation: string;
+}
+```
+
+## API Interaction
+- OpenAI API endpoint: https://api.openai.com/v1/chat/completions
+- OR Anthropic API endpoint: https://api.anthropic.com/v1/messages
+
+Ensure the prompt to the LLM specifies the required output format for consistent parsing:
+```
+Given these tasks:
+${tasks.join('\n- ')}
+
+Please create an optimized daily schedule with specific times and a brief explanation of your reasoning. Format your response exactly like this:
+
+EXPLANATION: [Your explanation of why you ordered the tasks this way]
+
+SCHEDULE:
+[Time]: [Task description]
+[Time]: [Task description]
+...
+```
+
+## Testing Approach
+- Unit tests for individual components
+- Integration tests for API service
+- Mock API responses for consistent testing
+- End-to-end tests for key user flows
+
+## Acceptance Criteria
+- [ ] TypeScript is used throughout with proper typing
+- [ ] Tailwind CSS is used for all styling
+- [ ] UI is fully responsive
+- [ ] API calls successfully generate meaningful schedules
+- [ ] Loading states are handled appropriately
+- [ ] Error states provide useful feedback
+- [ ] Schedule visualization is engaging and easy to understand
+- [ ] All tests pass
