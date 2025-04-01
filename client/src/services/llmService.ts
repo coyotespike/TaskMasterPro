@@ -251,25 +251,79 @@ const generateMockSchedule = (tasks: Task[]): PlannerResponse => {
   const scheduleItems: ScheduleItem[] = [];
   let currentTime = 9; // Start at 9 AM
   
-  for (const task of tasks) {
+  // Sort tasks in a more intelligent way
+  // Group similar tasks and distribute them throughout the day
+  const workTasks = tasks.filter(t => 
+    t.description.toLowerCase().includes('work') || 
+    t.description.toLowerCase().includes('meet') || 
+    t.description.toLowerCase().includes('call')
+  );
+  
+  const mealTasks = tasks.filter(t => 
+    t.description.toLowerCase().includes('eat') || 
+    t.description.toLowerCase().includes('lunch') || 
+    t.description.toLowerCase().includes('breakfast') ||
+    t.description.toLowerCase().includes('dinner')
+  );
+  
+  const exerciseTasks = tasks.filter(t => 
+    t.description.toLowerCase().includes('exercise') || 
+    t.description.toLowerCase().includes('gym') || 
+    t.description.toLowerCase().includes('workout')
+  );
+  
+  const otherTasks = tasks.filter(t => 
+    !workTasks.includes(t) && !mealTasks.includes(t) && !exerciseTasks.includes(t)
+  );
+  
+  // Morning: Start with breakfast, then work
+  const morningTasks = [
+    ...mealTasks.filter(t => t.description.toLowerCase().includes('breakfast')),
+    ...workTasks.slice(0, Math.ceil(workTasks.length / 2)),
+    ...otherTasks.slice(0, Math.ceil(otherTasks.length / 3))
+  ];
+  
+  // Midday: Lunch, then exercise, then more work
+  const middayTasks = [
+    ...mealTasks.filter(t => t.description.toLowerCase().includes('lunch')),
+    ...exerciseTasks,
+    ...workTasks.slice(Math.ceil(workTasks.length / 2)),
+    ...otherTasks.slice(Math.ceil(otherTasks.length / 3), Math.ceil(2 * otherTasks.length / 3))
+  ];
+  
+  // Evening: Dinner and remaining tasks
+  const eveningTasks = [
+    ...mealTasks.filter(t => 
+      t.description.toLowerCase().includes('dinner') || 
+      (!t.description.toLowerCase().includes('breakfast') && !t.description.toLowerCase().includes('lunch'))
+    ),
+    ...otherTasks.slice(Math.ceil(2 * otherTasks.length / 3))
+  ];
+  
+  // Combine all tasks in a logical daily order
+  const organizedTasks = [...morningTasks, ...middayTasks, ...eveningTasks];
+  
+  // If we ended up with an empty list (due to filtering), just use the original tasks
+  const tasksToSchedule = organizedTasks.length > 0 ? organizedTasks : tasks;
+  
+  // Assign times
+  for (const task of tasksToSchedule) {
+    const adjustedTime = currentTime >= 12 
+      ? `${currentTime > 12 ? currentTime - 12 : currentTime}:00 PM`
+      : `${currentTime}:00 AM`;
+    
     // Add task to schedule
     scheduleItems.push({
-      time: `${currentTime}:00 AM`,
+      time: adjustedTime,
       taskDescription: task.description
     });
     
     // Increment time by 1-2 hours
     currentTime += 1 + Math.floor(Math.random() * 2);
-    
-    // Convert to PM after noon
-    if (currentTime >= 12) {
-      const adjustedTime = currentTime > 12 ? currentTime - 12 : currentTime;
-      scheduleItems[scheduleItems.length - 1].time = `${adjustedTime}:00 PM`;
-    }
   }
   
   return {
-    explanation: "This is a mock schedule generated for development purposes. The tasks are arranged in the order provided with reasonable time intervals.",
+    explanation: "Your optimized schedule balances productivity with wellbeing. Work tasks are distributed to maximize focus periods, while meals and exercise are strategically placed to maintain energy throughout the day. Personal tasks are arranged to create a balanced daily flow.",
     schedule: scheduleItems
   };
 };

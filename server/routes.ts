@@ -25,7 +25,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json({
       openaiApiKey: apiKey || "",
       apiProvider: process.env.API_PROVIDER || "openai",
-      useMockResponses: process.env.USE_MOCK_RESPONSES === "true" || process.env.NODE_ENV === "development"
+      useMockResponses: process.env.USE_MOCK_RESPONSES === "true"
     });
   });
 
@@ -48,17 +48,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // Test mock response during development or when API is unavailable
-      if (process.env.NODE_ENV === 'development' || process.env.USE_MOCK_IMAGES === 'true') {
+      // Test mock response only when explicitly requested
+      if (process.env.USE_MOCK_IMAGES === 'true') {
         console.log('Using mock image response');
         // Return a placeholder image URL after a short delay to simulate API call
-        setTimeout(() => {
-          return res.json({ 
+        return setTimeout(() => {
+          res.json({ 
             imageUrl: 'https://placehold.co/600x400/6366f1/white?text=Task+Icon',
             isMock: true
           });
         }, 500);
-        return;
       }
 
       const openai = new OpenAI({
