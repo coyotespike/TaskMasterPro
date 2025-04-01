@@ -280,6 +280,13 @@ export const generateTaskImage = async (taskDescription: string): Promise<string
     if (!response.ok) {
       const errorData = await response.json();
       console.warn(`Image generation failed: ${errorData.error}. Using fallback.`);
+      
+      // For rate limit errors, we'll delay future requests
+      if (response.status === 429) {
+        // Add a delay before allowing future image generation to let rate limits reset
+        await new Promise(resolve => setTimeout(resolve, 5000));
+      }
+      
       return generateFallbackImageUrl(taskDescription);
     }
 

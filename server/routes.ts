@@ -111,24 +111,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Create the prompt focusing on the conceptual meaning rather than the text description
-      const prompt = `Create a simple, vibrant, minimalist icon representing the concept of "${concept}". 
-      Do not include any text or letters. Use bright, solid colors and simple geometric shapes that clearly 
-      convey the activity or object. The image should be a centered icon on a solid background color that 
-      relates to the concept. Make it instantly recognizable as representing ${concept}.`;
+      const prompt = `Design a simple, colorful, flat icon representing the concept of "${concept}". 
+      Important rules:
+      1. NO TEXT OR LETTERS OF ANY KIND in the image
+      2. Use bright, solid colors and simple geometric shapes
+      3. Create a centered symbolic representation on a colored background
+      4. Use a minimalist style with clean lines and shapes
+      5. Make it instantly recognizable at small sizes
+      6. Focus on a single clear concept rather than multiple ideas
+      7. Use colors that evoke the mood of the activity
+      
+      This icon will be used as a small task icon in a scheduling app. Keep it visually distinct and meaningful.`;
 
-      // Set a timeout to prevent hanging indefinitely
+      // Set a timeout to prevent hanging indefinitely - increase to 30 seconds for image generation
       const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('OpenAI API request timed out')), 10000);
+        setTimeout(() => reject(new Error('OpenAI API request timed out')), 30000);
       });
 
-      // Make the actual API request
+      // Make the actual API request - use a smaller size for faster generation
       const apiRequestPromise = openai.images.generate({
         model: "dall-e-3",
         prompt: prompt,
         n: 1,
-        size: "1024x1024",
-        quality: "standard",
-        style: "vivid"
+        size: "1024x1024", // Using standard size for quality icons
+        quality: "standard", // Standard quality is sufficient for app icons
+        style: "vivid" // Vivid style for more colorful, eye-catching icons
       });
 
       // Race between the timeout and the actual request
@@ -157,6 +164,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
             error: 'OpenAI billing issue',
             details: 'There may be an issue with your OpenAI account quota or billing'
           });
+        } else if (error.message.includes('rate limit') || error.message.includes('rate_limit_exceeded')) {
+          console.log('Rate limit hit, retrying with delay');
+          
+          // Set a short timeout to allow rate limits to reset
+          setTimeout(() => {
+            return res.status(429).json({
+              error: 'OpenAI rate limit exceeded',
+              details: 'Too many requests sent to OpenAI in a short time'
+            });
+          }, 500);
+          return;
         }
       }
       
