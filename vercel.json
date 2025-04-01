@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "buildCommand": "npm run build",
+  "buildCommand": "cp package.json.nextjs package.json && npm install && npm run build",
   "devCommand": "npm run dev",
-  "outputDirectory": ".next",
+  "outputDirectory": "out",
   "framework": null,
   "env": {
     "NODE_ENV": "production"
